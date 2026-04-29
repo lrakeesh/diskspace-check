@@ -1,0 +1,13 @@
+---
+- name: Run PowerShell command using win_shell
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: List running services
+      ansible.windows.win_shell: |
+        Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object -First 5
+      register: services
+
+    - name: Show services
+      debug:
+        var: services.stdout_lines

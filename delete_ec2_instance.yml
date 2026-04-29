@@ -1,0 +1,39 @@
+---
+- name: Terminate EC2 instance in AWS
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    aws_region: "ap-south-1"
+    # Option 1: Terminate by instance ID
+    instance_ids:
+      - "i-071c441525d90d3a6"  # Replace with your instance ID
+    # Option 2: Terminate by Name tag (uncomment if using)
+    # instance_name: "MyAnsibleEC2"
+
+  tasks:
+    # --- Terminate by instance ID ---
+    - name: Terminate EC2 instance(s) by ID
+      amazon.aws.ec2_instance:
+        instance_ids: "{{ instance_ids }}"
+        state: absent
+        region: "{{ aws_region }}"
+        wait: yes
+      register: terminate_result
+      when: instance_ids is defined
+
+    # --- Terminate by Name tag ---
+    # - name: Terminate EC2 instance(s) by Name tag
+    #   amazon.aws.ec2_instance:
+    #     filters:
+    #       "tag:Name": "{{ instance_name }}"
+    #     state: absent
+    #     region: "{{ aws_region }}"
+    #     wait: yes
+    #   register: terminate_result
+    #   when: instance_name is defined
+
+    - name: Show termination result
+      debug:
+        var: terminate_result

@@ -1,0 +1,32 @@
+---
+- name: Check disk space on Windows servers
+  hosts: windows1
+  gather_facts: no
+  tasks:
+    - name: Get disk usage
+      win_shell: |
+        Get-PSDrive -PSProvider 'FileSystem' |
+        Select-Object Name, @{Name='Used(GB)';Expression={[math]::Round(($_.Used/1GB),2)}},
+                      @{Name='Free(GB)';Expression={[math]::Round(($_.Free/1GB),2)}},
+                      @{Name='Usage(%)';Expression={[math]::Round(($_.Used/$_.Used+$_.Free)*100,2)}}
+      register: disk_info
+
+    - name: Show disk usage
+      debug:
+        var: disk_info.stdout_lines
+
+    - name: Warn if usage exceeds 80%
+      win_shell: |
+        $drives = Get-PSDrive -PSProvider 'FileSystem'
+        foreach ($d in $drives) {
+          $usage = ($d.Used / ($d.Used + $d.Free)) * 100
+          if ($usage -gt 80) {
+            Write-Output "WARNING: Drive $($d.Name) is at $([math]::Round($usage,2))% usage"
+          }
+        }
+      register: high_usage
+
+    - name: Display warnings
+      debug:
+        var: high_usage.stdout_lines
+      when: high_usage.stdout != ""

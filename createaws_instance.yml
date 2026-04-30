@@ -1,0 +1,30 @@
+---
+- name: Create EC2 instance and get details
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    aws_region: ap-south-1
+    instance_type: c7i-flex.large
+    key_name: windows
+    security_group: sg-04fb385e281480e09
+    subnet_id: subnet-0053044fec68ce236
+    ami_id: ami-0402c408212ded1df  # Replace with a valid AMI ID
+
+  tasks:
+    - name: Launch EC2 instance
+      amazon.aws.ec2_instance:
+        name: my-windows-instance
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        security_groups: [ "{{ security_group }}" ]
+        subnet_id: "{{ subnet_id }}"
+        image_id: "{{ ami_id }}"
+        region: "{{ aws_region }}"
+        wait: yes
+      register: ec2_result
+
+    - name: Show instance details
+      debug:
+        var: ec2_result.instances
